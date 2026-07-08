@@ -1,4 +1,8 @@
 # projectRestart
-Undertaking the COSC310 coursework project from Scratch on my own over the summer 
-With Best practices and solid documentation.
+FAST API for back
+Dependency manager UV
+SQL Alchemy for DB
+Pydantic for Models
+Folder Structure:
+
 
