@@ -8,11 +8,11 @@ metadata = sa.MetaData()
 users = sa.Table(
     "users",
     metadata,
-    sa.Column("firstName", sa.String),
-    sa.Column("lastName", sa.String),
-    sa.Column("email", sa.String),
+    sa.Column("firstname", sa.String(255), nullable = False),
+    sa.Column("lastname", sa.String(255), nullable = False),
+    sa.Column("email", sa.String(255), nullable = False),
     sa.Column("id", sa.Integer, primary_key = True),
-    sa.Column("password", sa.String),
-    sa.Column("CreatedAt", sa.DateTime, default = sa.func.current_timestamp()),
-    sa.Column("UdatedAt", sa.DateTime,onupdate = sa.func.current_timestamp())
+    sa.Column("password", sa.String(255), nullable = False),
+    sa.Column("created_at", sa.Date, nullable = False),
+    sa.Column("updated_at", sa.DateTime,onupdate = sa.func.current_timestamp())
 )
