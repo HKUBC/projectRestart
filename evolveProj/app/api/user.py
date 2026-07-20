@@ -17,14 +17,19 @@ class UserResponse(BaseModel):
      email: str
      id: int
 model_config = ConfigDict(from_attributes=True)
-
-def get_all_users(db: Session):
+def check_if_db_exist(db: Session):
 
     find_allUsers = users.select().where(users.c.id>=0).limit(1)
-    
+
     search = db.execute(find_allUsers).first()
     if search is None :
-        raise HTTPException(status_code=404,detail= "No users in Database")
+            raise HTTPException(status_code=404,detail= "No users in Database")
+    return 
+
+
+def get_all_users(db: Session):
+    check_if_db_exist(db)
+   
     fetch_all_users = users.select().with_only_columns(
     users.c.firstname,
     users.c.lastname,
@@ -35,6 +40,25 @@ def get_all_users(db: Session):
     list_of_users = fetched.mappings().all()
   
     return list_of_users
+
+def get_users_by_id(user_id: int, db: Session):
+    #check if Database exists
+    check_if_db_exist(db)
+
+    #find user
+    user = db.execute(users.select().where(users.c.id == user_id)).first()
+    #user = db.query(users).filter(users.c.id == user_id).first
+    print(user)
+    if user is None:
+        raise HTTPException(status_code= 404, detail ="No user with the ID {user_id} exist")
+    get_user = users.select().where(users.c.id == user_id).with_only_columns(
+    users.c.firstname,
+    users.c.lastname,
+    users.c.email,
+    users.c.id)
+    get_from_db = db.execute(get_user)
+    in_list = get_from_db.mappings().all()
+    return in_list
 
 def add_user(makeUser: CreateUser, db: Session):
     #check if the user already exists
@@ -53,3 +77,4 @@ def add_user(makeUser: CreateUser, db: Session):
     result = db.execute(newUser)
     db.commit()
     return result.scalar()
+

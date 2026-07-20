@@ -35,9 +35,12 @@ def sanity():
 def get_allUsers(db: Session = Depends(get_db)):
     return user.get_all_users(db)
 
+@app.post("/get_user_by_id/")
+def get_user_by_id(user_id: int,db: Session = Depends(get_db)):
+    return user.get_users_by_id(user_id, db)
+
 @app.post("/createusers/")
 def create_user(add_user: user.CreateUser, db: Session = Depends(get_db)):
  user_id = user.add_user(add_user, db)
  return {f"User with user id {user_id} has been added successfully!"}
-
 
