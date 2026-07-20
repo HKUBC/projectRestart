@@ -44,3 +44,9 @@ def create_user(add_user: user.CreateUser, db: Session = Depends(get_db)):
  user_id = user.add_user(add_user, db)
  return {f"User with user id {user_id} has been added successfully!"}
 
+@app.put("/delete_user/")
+def delete(user_id : int,db: Session = Depends(get_db)):
+    user.delete(user_id,db)
+    return {f"User with id {user_id} has been succesfully deleted"}
+
+
