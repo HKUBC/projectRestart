@@ -1,3 +1,4 @@
+from ntpath import exists
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
 from app.db.models.user_information.user_table import users
@@ -18,9 +19,22 @@ class UserResponse(BaseModel):
 model_config = ConfigDict(from_attributes=True)
 
 def get_all_users(db: Session):
-    if not users:
+
+    find_allUsers = users.select().where(users.c.id>=0).limit(1)
+    
+    search = db.execute(find_allUsers).first()
+    if search is None :
         raise HTTPException(status_code=404,detail= "No users in Database")
-    return db.query(users).all()
+    fetch_all_users = users.select().with_only_columns(
+    users.c.firstname,
+    users.c.lastname,
+    users.c.email,
+    users.c.id)
+
+    fetched = db.execute(fetch_all_users)
+    list_of_users = fetched.mappings().all()
+  
+    return list_of_users
 
 def add_user(makeUser: CreateUser, db: Session):
     #check if the user already exists

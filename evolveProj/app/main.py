@@ -32,11 +32,12 @@ def sanity():
     return {"message": "Hello, I'm alive"}
     
 @app.get("/users/")
-def get_allUsers() :
-    database = get_db()
-    return user.get_all_users(database)
+def get_allUsers(db: Session = Depends(get_db)):
+    return user.get_all_users(db)
 
 @app.post("/createusers/")
 def create_user(add_user: user.CreateUser, db: Session = Depends(get_db)):
  user_id = user.add_user(add_user, db)
  return {f"User with user id {user_id} has been added successfully!"}
+
+
