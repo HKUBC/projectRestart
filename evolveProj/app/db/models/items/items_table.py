@@ -10,5 +10,6 @@ items = sa.Table(
     sa.Column("category", sa.String(255)),
     sa.Column("tag", sa.String(20)),
     sa.Column("created_at", sa.DateTime,default = sa.func.current_timestamp(),server_default=sa.func.current_timestamp()),
-    sa.Column("updated_at", sa.DateTime,onupdate = sa.func.current_timestamp())
+    sa.Column("updated_at", sa.DateTime,onupdate = sa.func.current_timestamp()),
+    sa.Column("deleted_at",sa.DateTime, nullable= True)
 )

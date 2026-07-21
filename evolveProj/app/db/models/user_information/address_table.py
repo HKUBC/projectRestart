@@ -4,7 +4,7 @@ from app.db.db_setup import metadata
 address = sa.Table(
     "address",
     metadata,
-    #sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
+    sa.Column("user_id", sa.Integer, sa.ForeignKey("users.id")),
     sa.Column("address_line", sa.String(255)),
     sa.Column("suit_number", sa.String(255)),
     sa.Column("phone_number", sa.Integer),

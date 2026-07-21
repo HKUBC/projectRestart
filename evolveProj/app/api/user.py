@@ -1,4 +1,3 @@
-from ntpath import exists
 from fastapi import HTTPException
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -52,8 +51,8 @@ def get_users_by_id(user_id: int, db: Session):
     user = db.execute(users.select().where(users.c.id == user_id)).first()
     #user = db.query(users).filter(users.c.id == user_id).first
     if user is None:
-        raise HTTPException(status_code= 404, detail ="No user with the ID {user_id} exist")
-    get_user = users.select().where(users.c.id == user_id and user.c.deleted_at.is_(None)).with_only_columns(
+        raise HTTPException(status_code= 404, detail =f"No user with the ID {user_id} exist")
+    get_user = users.select().where(users.c.id == user_id and users.c.deleted_at.is_(None)).with_only_columns(
     users.c.firstname,
     users.c.lastname,
     users.c.email,
@@ -86,13 +85,16 @@ def delete(id: int, db: Session):
     #check if user exists
     user = db.execute(users.select().where(users.c.id == id)).first()
     if user is None:
-        raise HTTPException(status_code= 404, detail ="No user with the ID {user_id} exist")
+        raise HTTPException(status_code= 404, detail =f"No user with the ID {id} exist")
     #check if user is already deleted
-    is_deleted = db.execute(users.select().where(users.c.id == id and user.c.deleted_at.is_(None)))
+    is_deleted = db.execute(users.select().where((users.c.id == id ) & (users.c.deleted_at.is_(None)))).first()
+    print(is_deleted)
     if is_deleted is None:
-        raise HTTPException(status_code= 404, detail ="No user with the ID {user_id} was already deleted")
+        raise HTTPException(status_code= 404, detail =f"No user with the ID {id} was already deleted")
     #Soft deleting user
 
-    users.update().where(users.c.id == id).values(deleted_at = func.current_timestamp())
+    delete_user =  users.update().where(users.c.id == id).values(deleted_at = func.current_timestamp())
+    db.execute(delete_user)
+    db.commit()
 
 
