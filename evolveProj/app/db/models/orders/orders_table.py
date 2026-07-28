@@ -1,7 +1,7 @@
 import sqlalchemy as sa
 from app.db.db_setup import metadata
 
-# ? maybe not can be combined with wishlist, but called by different methods
+# ? maybe can be combined with wishlist, but called by different methods
 orders = sa.Table(
     "orders",
     metadata,
