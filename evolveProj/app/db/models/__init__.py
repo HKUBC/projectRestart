@@ -13,5 +13,3 @@ from app.db.models.items.wishlist_table import wishlist
 
 from app.db.models.displayed_information.news_table import news
 from app.db.models.displayed_information.reviews_table import reviews
-
-# ! Ignored all Foreign keys in tables because they were causing problems, add foreign key columns at later date
