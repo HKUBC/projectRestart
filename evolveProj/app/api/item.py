@@ -1,4 +1,3 @@
-from typing import List
 from fastapi import HTTPException, APIRouter, Depends, status
 from sqlalchemy import func
 from sqlalchemy.orm import Session
@@ -6,12 +5,10 @@ from app.db.db_setup import get_db
 from app.db.models.items.items_table import items 
 from app.db.models.items.categories_table import categories
 from pydantic import BaseModel, ConfigDict
-#from evolveProj.app.api.user import model_config
 
 class CreateItem(BaseModel):
     price: float
     name: str
-    category: str
     tag: str
 class Item_response(BaseModel):
     id: int
@@ -34,8 +31,7 @@ def print_items(items):
         
         print_item = items.mappings().all()
         return print_item 
-    #checks if the table exists
-    # ! Code might be redundant with other checks, further testing required    
+    #checks if the table exists  
 def table_exists (db: Session=Depends(get_db)):
         find_any_item = items.select().where(items.c.id>=0).limit(1)
         search = db.execute(find_any_item).first()
@@ -44,8 +40,8 @@ def table_exists (db: Session=Depends(get_db)):
         return
     # Search for an Item  
 router = APIRouter()
-
-@router.get("",response_model=Item_response,status_code=status.HTTP_200_OK)
+# ! update naming of enpoints
+@router.get("/{item_id}",response_model=Item_response,status_code=status.HTTP_200_OK)
 def find_item(id: int, db: Session=Depends(get_db)):
     table_exists(db) 
     search(id, db)
@@ -56,11 +52,11 @@ def find_item(id: int, db: Session=Depends(get_db)):
         items.c.id,
         items.c.price,
         items.c.name,
-        categories.c.name,
+        categories.c.category,
         items.c.tag
         )
 
-    fetch_item = db.execute(get_items_join)
+    fetch_item = db.execute(get_items_join).first()
 
 
 
@@ -70,15 +66,13 @@ def find_item(id: int, db: Session=Depends(get_db)):
         #get_from_db = db.execute(get_items)
 
     # Create new Item 
-@router.post("",response_model=CreateItem, status_code=status.HTTP_200_OK)   
-def add_item(addItem: CreateItem, db: Session=Depends(get_db)):
-
-        #Ensures that all text is lowercase to match properly with that is in the Database
-        matchedCategory = (addItem.category).lower()
+    # ! update naming of enpoints
+@router.post("/{category_id}",response_model=CreateItem, status_code=status.HTTP_200_OK)   
+def add_item(category_id: int, addItem: CreateItem, db: Session=Depends(get_db)):
 
         # Get entered catgory, find the category ID and return it
-        id_query = categories.select().where((categories.c.category == matchedCategory) & (categories.c.deleted_at.is_(None))).with_only_columns(categories.c.id)
-        cat_id = db.execute(id_query).scalar()
+        category_id_query = categories.select().where((categories.c.id == category_id) & (categories.c.deleted_at.is_(None))).with_only_columns(categories.c.id)
+        cat_id = db.execute(category_id_query).scalar()
         items_query_filter = (items.c.name ==addItem.name) & (items.c.category_id == cat_id)& (items.c.tag == addItem.tag)
         if (db.query(items).filter(items_query_filter).first()):
             raise HTTPException(status_code=409, detail=f"Item {addItem.name} already exists")
@@ -90,10 +84,10 @@ def add_item(addItem: CreateItem, db: Session=Depends(get_db)):
             name = addItem.name,
             category_id = cat_id,
             tag = addItem.tag
-        ).returning(items.c.name)
+        ).returning()
         adding = db.execute(new_item)
         db.commit()
-        return adding.scalar()
+        return adding.mappings().all()
 
     #Delete Items 
 @router.put("/{id}",status_code=status.HTTP_200_OK)

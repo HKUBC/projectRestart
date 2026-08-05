@@ -13,3 +13,4 @@ from app.db.models.items.wishlist_table import wishlist
 
 from app.db.models.displayed_information.news_table import news
 from app.db.models.displayed_information.reviews_table import reviews
+from app.db.models.mapping_tables.order_items import order_items

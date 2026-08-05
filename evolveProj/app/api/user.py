@@ -33,7 +33,7 @@ def check_if_db_exist(db: Session = Depends(get_db)):
 router = APIRouter()
 
 @router.get("",response_model=List[UserResponse], status_code=status.HTTP_200_OK)
-def get_all_users(db: Session = Depends(get_db)):
+def get_users(db: Session = Depends(get_db)):
     check_if_db_exist(db)
    
     fetch_all_users = users.select().where(users.c.deleted_at.is_(None)).with_only_columns(
@@ -47,7 +47,7 @@ def get_all_users(db: Session = Depends(get_db)):
   
     return list_of_users
 @router.get("/{user_id}",status_code=status.HTTP_200_OK)
-def get_users_by_id(user_id: int,db: Session = Depends(get_db)):
+def get_user(user_id: int,db: Session = Depends(get_db)):
     #check if Database exists
     check_if_db_exist(db)
     #find user
@@ -66,7 +66,7 @@ def get_users_by_id(user_id: int,db: Session = Depends(get_db)):
     return in_list
 
 @router.post("", response_model=CreateUser, status_code=status.HTTP_201_CREATED)
-def add_user(makeUser: CreateUser, db: Session = Depends(get_db)):
+def create_user(makeUser: CreateUser, db: Session = Depends(get_db)):
     #check if the user already exists
     if (db.query(users).filter(users.c.email == makeUser.email).first()):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
@@ -81,7 +81,7 @@ def add_user(makeUser: CreateUser, db: Session = Depends(get_db)):
     result = db.execute(newUser)
     db.commit()
     return result.scalar()
-@router.put("/{user_id}", status_code=status.HTTP_202_ACCEPTED)
+@router.delete("/{user_id}", status_code=status.HTTP_202_ACCEPTED)
 def delete(id: int, db: Session = Depends(get_db)):
     #check if table exists
     check_if_db_exist(db)
@@ -96,8 +96,8 @@ def delete(id: int, db: Session = Depends(get_db)):
         raise HTTPException(status.HTTP_404_NOT_FOUND, detail =f"No user with the ID {id} was already deleted")
     #Soft deleting user
 
-    delete_user =  users.update().where(users.c.id == id).values(deleted_at = func.current_timestamp())
-    db.execute(delete_user)
+    delete_user_query =  users.update().where(users.c.id == id).values(deleted_at = func.current_timestamp())
+    db.execute(delete_user_query)
     db.commit()
 
 
