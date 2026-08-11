@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta
 from typing import Annotated, List
 from fastapi import HTTPException, APIRouter, Depends, status
@@ -11,6 +12,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from app.api.auth import hash_password, create_access_token,verify_access_token, verify_password, oauth2_scheme
 from app.api.config import settings
 
+RAND_ID= int(random.random()*10000)
 
 bcrypt_context = CryptContext(schemes=['bcrypt'], deprecated= 'auto')
 
@@ -44,9 +46,9 @@ def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db: Annotate
         user_id_int = int(user_id)
  except(TypeError, ValueError):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail = "Invalid or expired token")
- get_current_user_query = users.select().where(users.c.id == user_id_int)
- result = db.execute(get_current_user_query)
- user = result.scalars().first()
+ get_current_user_query = users.select().with_only_columns(users.c.id).where(users.c.id == user_id_int)
+ result = db.execute(get_current_user_query).scalar_one_or_none()
+ user = result
  if not user:
     raise HTTPException(status_code= status.HTTP_401_UNAUTHORIZED, detail= "User not found")
 
@@ -59,13 +61,11 @@ def create_user(makeUser: CreateUser, db: Annotated[Session, Depends(get_db)]):
     #check if the user already exists
     if (db.query(users).filter(users.c.email == makeUser.email).first()):
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already in use")
-    
     #Hash user password
     hashed_password = hash_password(makeUser.password)
     #Create and add user to the database
-
     newUser = users.insert().values(
-
+        id = RAND_ID,
         firstname = makeUser.firstname,
         lastname = makeUser.lastname,
         email = makeUser.email,
@@ -84,27 +84,19 @@ def log_in_for_access_token( form_data: Annotated[OAuth2PasswordRequestForm, Dep
  #verify user info
  if user is None or not verify_password(form_data.password, hashed_password):
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail= "Wrong email or password")
-
-
-
  userID = user._mapping["id"]
-
  access_token_expires = timedelta(minutes = settings.access_token_expire)
-
-
-
  access_token = create_access_token(data = {"sub": str(userID)},
  expires_delta= access_token_expires
  )
-
  return {
     "access_token": access_token,
     "token_type": "bearer"
          }
 
 
-@router.get("/me", response_model=UserResponse)
-def me(current_user: Annotated[UserResponse, Depends(get_current_user)]):
+@router.get("/me")
+def me(current_user: Annotated[int, Depends(get_current_user)]):
     return current_user
 
 
@@ -113,10 +105,11 @@ def get_users(db: Annotated[Session, Depends(get_db)]):
     check_if_db_exist(db)
    
     fetch_all_users = users.select().where(users.c.deleted_at.is_(None)).with_only_columns(
+    users.c.id,
     users.c.firstname,
     users.c.lastname,
-    users.c.email,
-    users.c.id)
+    users.c.email
+    )
 
     fetched = db.execute(fetch_all_users)
     list_of_users = fetched.mappings().all()
@@ -125,7 +118,7 @@ def get_users(db: Annotated[Session, Depends(get_db)]):
 
 
 @router.get("/{user_id}",status_code=status.HTTP_200_OK)
-def get_user(user_id: Annotated[UserResponse, Depends(get_current_user)],db: Annotated[Session, Depends(get_db)]):
+def get_user(user_id: Annotated[int, Depends(get_current_user)],db: Annotated[Session, Depends(get_db)]):
     #check if Database exists
     check_if_db_exist(db)
     #find user
@@ -135,16 +128,16 @@ def get_user(user_id: Annotated[UserResponse, Depends(get_current_user)],db: Ann
     if user is None:
         raise HTTPException(status_code= status.HTTP_404_NOT_FOUND, detail =f"No user with the ID {user_id} exist")
     get_user = users.select().where((users.c.id == user_id) & (users.c.deleted_at.is_(None))).with_only_columns(
+    users.c.id,
     users.c.firstname,
     users.c.lastname,
-    users.c.email,
-    users.c.id)
+    users.c.email)
     get_from_db = db.execute(get_user)
     in_list = get_from_db.mappings().all()
     return in_list
 
 @router.patch("/change-password")
-def change_password(user_id: Annotated[UserResponse, Depends(get_current_user)], password: str, new_password: str, new_password2: str, db: Annotated[Session, Depends(get_db)]):
+def change_password(user_id: Annotated[int, Depends(get_current_user)], password: str, new_password: str, new_password2: str, db: Annotated[Session, Depends(get_db)]):
     #Verify old password
  find_user_query = users.select().where(users.c.id == user_id)
  user = db.execute(find_user_query).first()
@@ -164,7 +157,7 @@ def change_password(user_id: Annotated[UserResponse, Depends(get_current_user)],
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_202_ACCEPTED)
-def delete(id:Annotated[UserResponse, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]):
+def delete(id:Annotated[int, Depends(get_current_user)], db: Annotated[Session, Depends(get_db)]):
     #check if table exists
     check_if_db_exist(db)
     #check if user exists

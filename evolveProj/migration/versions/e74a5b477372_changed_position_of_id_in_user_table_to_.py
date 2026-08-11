@@ -1,8 +1,8 @@
-"""added names to fields missing them
+"""Changed position of id in User table to be first
 
-Revision ID: 55c5219d24f2
-Revises: 033407ddcbce
-Create Date: 2026-07-29 13:01:33.837748
+Revision ID: e74a5b477372
+Revises: 1718f6804cea
+Create Date: 2026-08-11 15:14:40.892589
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '55c5219d24f2'
-down_revision: Union[str, Sequence[str], None] = '033407ddcbce'
+revision: str = 'e74a5b477372'
+down_revision: Union[str, Sequence[str], None] = '1718f6804cea'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
