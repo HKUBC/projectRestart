@@ -1,6 +1,6 @@
 # from unicodedata import category
 from fastapi import FastAPI
-from app.api import user, item , category, order
+from app.api import user, item , category, order, auth
 
 
 app = FastAPI()
